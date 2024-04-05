@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body class="container">
+
+<div class="container">
+    <h1 class="text-center mb-4">Student Records</h1>
+    <!-- Add Student Button -->
+    <button id="addStudentBtn" class="btn btn-primary mb-4" data-toggle="modal" data-target="#addStudentModal">Add Student</button>
+
+    <!-- Student Records Table -->
+    <table id="studentRecordsTable" class="table">
+        <thead>
+            <tr>
+                <th>Registration Number</th>
+                <th>Name</th>
+                <th>Phone Number</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="studentRecordsTableBody">
+            <!-- Student records will be dynamically added here -->
+        </tbody>
+    </table>
+    <!-- Delete All Students Button -->
+    <button id="deleteAllStudentsBtn" class="btn btn-danger">Delete All Students</button>
+</div>
+
+<!-- Add/Edit Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" role="dialog" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addStudentModalLabel">Add/Edit Student</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="addStudentForm">
+            <div class="form-group">
+                <label for="registrationNumber">Registration Number</label>
+                <input type="text" class="form-control" id="registrationNumber" required>
+            </div>
+            <div class="form-group">
+                <label for="studentName">Name</label>
+                <input type="text" class="form-control" id="studentName" required>
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="text" class="form-control" id="phoneNumber" required>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="saveStudentBtn">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS and jQuery -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
+
+<!-- Firebase SDK-->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<!-- Firebase Config -->
+<script src="firebaseConfig.js"></script>
+
+<!-- avaScript table add details logic -->
+<script>
+    $(document).ready(function(){
+        // Get a reference to the Firestore database
+        var db = firebase.firestore();
+
+        // Add student function
+        $("#saveStudentBtn").click(function(){
+            var registrationNumber = $("#registrationNumber").val();
+            var studentName = $("#studentName").val();
+            var phoneNumber = $("#phoneNumber").val();
+
+            // Add a new document with a generated ID
+            db.collection("students").add({
+                registrationNumber: registrationNumber,
+                studentName: studentName,
+                phoneNumber: phoneNumber
+            })
+            .then(function(docRef) {
+                console.log("Document written with ID: ", docRef.id);
+            })
+            .catch(function(error) {
+                console.error("Error adding document: ", error);
+            });
+
+            $("#studentRecordsTableBody").append("<tr><td>"+registrationNumber+"</td><td>"+studentName+"</td><td>"+phoneNumber+"</td><td><button class='btn btn-danger deleteBtn'>Delete</button><button class='btn btn-primary ml-2 editBtn'>Edit</button></td></tr>");
+
+            // Clear input fields after adding student
+            $("#registrationNumber").val("");
+            $("#studentName").val("");
+            $("#phoneNumber").val("");
+
+            // Close the modal
+            $("#addStudentModal").modal("hide");
+        });
+
+        // Edit student function
+        $(document).on("click", ".editBtn", function(){
+            var row = $(this).closest("tr");
+            var registrationNumber = row.find("td:eq(0)").text();
+            var studentName = row.find("td:eq(1)").text();
+            var phoneNumber = row.find("td:eq(2)").text();
+
+            // Populate the modal with the selected row data for editing
+            $("#registrationNumber").val(registrationNumber);
+            $("#studentName").val(studentName);
+            $("#phoneNumber").val(phoneNumber);
+
+            // Show the modal
+            $("#addStudentModal").modal("show");
+        });
+
+        // Delete student function
+        $(document).on("click", ".deleteBtn", function(){
+            $(this).closest("tr").remove(); // Remove row when delete button is clicked
+        });
+
+        // Delete all students function
+        $("#deleteAllStudentsBtn").click(function(){
+            $("#studentRecordsTableBody").empty(); // Empty the table body
+        });
+    });
+</script>
+
+</body>
+</html>
